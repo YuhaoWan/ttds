@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>hello world</title>
+    <link rel="stylesheet" href="../static/index.css" />
+
+</head>
+<body>
+
+
+{#<div class="cntr">#}
+{#	<div class="cntr-innr">#}
+{#        <h1>FINDMUSIC</h1>#}
+{#        <form method="post">#}
+{##}
+{#			<input class="search" id="search" type="text" /><button class="search-btn" type="button">Search</button>#}
+{#            #}
+{#        </form>#}
+{#	</div>#}
+{#</div>#}
+
+<div class="header">
+    <form>
+        <h1>FIND MUSIC</h1>
+        <div class="form-box">
+            <input type="text" class="search-input">
+            <button class="search-btn" type="button">Search</button>
+        </div>
+
+
+    </form>
+</div>
+
+
+
+
+<div class="middle">
+    <label>result number:100</label>
+    <table class="table table-hover">
+	     {% for i,v in num.items() %}
+		  <tr>
+			<td>{{v[0]}}</td>
+            <td>{{v[1]}}</td>
+            <td>{{v[2]}}</td>
+            <td>{{v[3]}}</td>
+		  </tr>
+
+	     {% endfor %}
+</table>
+</div>
+
+
+
+
+
+</body>
+</html>
