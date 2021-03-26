@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Music Search</title>
+    <link rel="stylesheet" href="../static/music.css" />
+
+</head>
+<body>
+
+<div class="header">
+    <form method="post">
+        <div class="form-box">
+            <label class="search-label">FIND MUSIC</label>
+            <input type="text" class="search-input" name="query" value="{{query}}">
+            <button class="search-btn" type="submit" value="Search">Search</button>
+        </div>
+    </form>
+</div>
+
+<div class="middle-table">
+        <h2>Result List</h2>
+		<table class="Modbus">
+			<thead>
+			<tr>
+                <th>Songs</th>
+				<th>Artists</th>
+				<th>Albums</th>
+				<th>Date</th>
+                <th>Topic</th>
+			</tr>
+			</thead>
+        {% for i,v in num.items() %}
+			<tr>
+				<td class="item1">{{v[0]}}</td>
+				<td class="item2">{{v[1]}}</td>
+				<td class="item3">{{v[2]}}</td>
+				<td class="item4">{{v[3]}}</td>
+                <td class="item4">{{v[4]}}</td>
+			</tr>
+      {% endfor %}
+		</table>
+</div>
+
+{#<div class="middle">#}
+{#    <label>result number:100</label>#}
+{#    <table class="table table-hover">#}
+{#	     {% for i,v in num.items() %}#}
+{#		  <tr>#}
+{#			<td>songname:{{v}}</td>#}
+{#            <td>singer:{{v}}</td>#}
+{#            <td>album:{{v}}</td>#}
+{#            <td>date:{{v}}</td>#}
+{#		  </tr>#}
+{##}
+{#	     {% endfor %}#}
+{#</table>#}
+{#</div>#}
+
+
+</body>
+</html>
