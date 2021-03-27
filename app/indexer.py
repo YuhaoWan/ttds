@@ -132,8 +132,8 @@ class Indexer:
         common_dictionary = corpora.Dictionary(common_texts)
         common_dictionary.filter_extremes(no_below=10, no_above=0.5, keep_n=10000, keep_tokens=None)
         bow = [common_dictionary.doc2bow(words) for words in common_texts]
-        lda = models.LdaModel(bow, num_topics=50, id2word=common_dictionary, random_state=1)
-        topics = lda.show_topics(num_topics=50, num_words=5, formatted=False)
+        lda = models.LdaModel(bow, num_topics=100, id2word=common_dictionary, random_state=1)
+        topics = lda.show_topics(num_topics=100, num_words=5, formatted=False)
         topics_words = [[word[0] for word in topic[1]] for topic in topics]
         for words, (artist, index) in zip(common_texts, self.lyrics.keys()):
             doc_bow = common_dictionary.doc2bow(words)

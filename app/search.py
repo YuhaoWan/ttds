@@ -13,5 +13,7 @@ def index():
 
 @bp.route('/search', methods=('GET', 'POST'))
 def search():
+
     query = request.form['keyword']
-    return render_template('music.html', result=algorithm('keyword', query))
+
+    return render_template('music.html', result=algorithm('song', query))
