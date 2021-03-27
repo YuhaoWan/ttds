@@ -18,7 +18,7 @@ body
 h1
 {
     color: #FFFFFF;
-    margin-bottom: 70px;
+    margin-bottom: 120px;
     font-size: 45px;
     letter-spacing: 2px;
     text-align: center;
@@ -27,10 +27,10 @@ h1
 .search-input{
     height: 40px;
     width: 500px;
-
-    border: none;
+    border: 25px;
     border-radius: 25px;
     outline: none;
+    text-indent: 10px;
 }
 
 .search-btn {

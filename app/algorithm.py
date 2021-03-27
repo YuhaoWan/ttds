@@ -1,10 +1,8 @@
-import os
 import re
-import pandas as pd
+import pickle
 from stemming.porter2 import stem
 from collections import defaultdict
 from math import log10
-from gensim import corpora, models
 
 
 # tokenization
@@ -246,176 +244,109 @@ def rank_BM25(query, docs, inv_idx_docs, idx_docs):
     return sorted_tfidf
 
 
-class TextSearch:
+def algorithm(choice, query):
+    with open('./app/data/pickle/title.pickle', 'rb') as f:
+        title = pickle.load(f)
+    with open('./app/data/pickle/title_reverse_indexer.pickle', 'rb') as f:
+        title_reverse_indexer = pickle.load(f)
+    with open('./app/data/pickle/title_words_count.pickle', 'rb') as f:
+        title_words_count = pickle.load(f)
 
-    def __init__(self):
-        self.title, self.album, self.lyrics, self.dates, self.title_words, self.album_words, self.lyrics_words, \
-        self.title_words_freq, self.album_words_freq, self.lyrics_words_freq = self.build_index()
-        self.topic_words = self.build_topic_list()
+    with open('./app/data/pickle/album.pickle', 'rb') as f:
+        album = pickle.load(f)
+    with open('./app/data/pickle/album_reverse_indexer.pickle', 'rb') as f:
+        album_reverse_indexer = pickle.load(f)
+    with open('./app/data/pickle/album_words_count.pickle', 'rb') as f:
+        album_word_counts = pickle.load(f)
 
-    # indexer
-    @staticmethod
-    def build_index():
-        title, album, lyrics, dates = dict(), dict(), dict(), dict()
-        title_words, album_words, lyrics_words = dict(), dict(), dict()
-        title_words_freq, album_words_freq, lyrics_words_freq = dict(), dict(), dict()
-        for root, dirs, files in os.walk('./app/data/csv'):
-            for filename in files:
-                songs = './app/data/csv/' + filename
-                df = pd.read_csv(songs)
-                artist = df['Artist'].tolist()[0]
+    with open('./app/data/pickle/lyrics.pickle', 'rb') as f:
+        lyrics = pickle.load(f)
+    with open('./app/data/pickle/lyrics_reverse_indexer.pickle', 'rb') as f:
+        lyrics_reverse_indexer = pickle.load(f)
+    with open('./app/data/pickle/lyrics_words_count.pickle', 'rb') as f:
+        lyrics_word_counts = pickle.load(f)
 
-                # process title
-                for index, text in enumerate(df['Title'].tolist()):
-                    title[artist, index] = str(text)
-                    words = preprocessing(title[artist, index])
-                    for i in range(len(words)):
-                        word = words[i]
-                        pos = i
-                        if word in title_words:
-                            if (artist, index) in title_words[word]:
-                                title_words[word][artist, index].append(pos)
-                            else:
-                                title_words[word][artist, index] = [pos]
-                        else:
-                            title_words[word] = {(artist, index): [pos]}
+    with open('./app/data/pickle/topic_related_words.pickle', 'rb') as f:
+        topic_related_words = pickle.load(f)
+    with open('./app/data/pickle/dates.pickle', 'rb') as f:
+        dates = pickle.load(f)
 
-                        if (artist, index) in lyrics_words_freq:
-                            if word in lyrics_words_freq[artist, index]:
-                                lyrics_words_freq[artist, index][word] += 1
-                            else:
-                                lyrics_words_freq[artist, index][word] = 1
-                        else:
-                            lyrics_words_freq[artist, index] = {word: 1}
+    res = dict()
+    i = 1
+    if choice == 'song':
+        p = re.split(r' (AND|OR) ', query)
+        q = query
+        q = q.replace('AND', ' ')
+        q = q.replace('OR', ' ')
+        q = q.replace('NOT', ' ')
 
-                for index, text in enumerate(df['Album'].tolist()):
-                    album[artist, index] = str(text)
-                    if album[artist, index] == 'NaN' or album[artist, index] == 'nan':
-                        album[artist, index] = ''
-                    else:
-                        words = preprocessing(album[artist, index])
-                        for i in range(len(words)):
-                            word = words[i]
-                            pos = i
-                            if word in album_words:
-                                if (artist, index) in album_words[word]:
-                                    album_words[word][artist, index].append(pos)
-                                else:
-                                    album_words[word][artist, index] = [pos]
-                            else:
-                                album_words[word] = {(artist, index): [pos]}
+        tfidf = rank_BM25(q, title, title_reverse_indexer, title_words_count)
 
-                            if (artist, index) in album_words_freq:
-                                if word in album_words_freq[artist, index]:
-                                    album_words_freq[artist, index][word] += 1
-                                else:
-                                    album_words_freq[artist, index][word] = 1
-                            else:
-                                album_words_freq[artist, index] = {word: 1}
+        if len(p) == 1:
+            search_result = phrase_search(title_reverse_indexer, query)
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) not in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
+        else:
+            query = evaluate(query)
+            search_result = boolean_search(title_reverse_indexer, query)
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) not in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
 
-                for index, text in enumerate(df['Lyric'].tolist()):
-                    lyrics[artist, index] = str(text).replace(artist, '')
-                    words = preprocessing(lyrics[artist, index])
-                    for i in range(len(words)):
-                        word = words[i]
-                        pos = i
-                        if word in lyrics_words:
-                            if (artist, index) in lyrics_words[word]:
-                                lyrics_words[word][artist, index].append(pos)
-                            else:
-                                lyrics_words[word][artist, index] = [pos]
-                        else:
-                            lyrics_words[word] = {(artist, index): [pos]}
+    elif choice == 'keyword':
+        p = re.split(r' (AND|OR) ', query)
+        q = query
+        q = q.replace('AND', ' ')
+        q = q.replace('OR', ' ')
+        q = q.replace('NOT', ' ')
+        tfidf = rank_BM25(q, lyrics, lyrics_reverse_indexer, lyrics_word_counts)
+        if len(p) == 1:
+            search_result = phrase_search(lyrics_reverse_indexer, query)
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) not in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
+        else:
+            query = evaluate(query)
+            search_result = boolean_search(lyrics_reverse_indexer, query)
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
+            for (artist, index), tfidf_value in tfidf:
+                if (artist, index) not in search_result:
+                    line = [title[artist, index], artist, album[artist, index], dates[artist, index],
+                            " ".join(topic_related_words[artist, index])]
+                    res[i] = line
+                    i += 1
 
-                        if (artist, index) in lyrics_words_freq:
-                            if word in lyrics_words_freq[artist, index]:
-                                lyrics_words_freq[artist, index][word] += 1
-                            else:
-                                lyrics_words_freq[artist, index][word] = 1
-                        else:
-                            lyrics_words_freq[artist, index] = {word: 1}
-
-                for index, text in enumerate(df['Date'].tolist()):
-                    dates[artist, index] = str(text)
-                    if dates[artist, index] == 'NaN' or dates[artist, index] == 'nan':
-                        dates[artist, index] = ''
-
-        title_words = dict(sorted(title_words.items(), key=lambda x: x[0]))
-        album_words = dict(sorted(album_words.items(), key=lambda x: x[0]))
-        lyrics_words = dict(sorted(lyrics_words.items(), key=lambda x: x[0]))
-        return title, album, lyrics, dates, title_words, album_words, lyrics_words, title_words_freq, album_words_freq, lyrics_words_freq
-
-    def build_topic_list(self):
-        common_texts = []
-        topic_words = {}
-
-        with open('./app/englishST.txt', encoding='utf-8') as f:
-            stop_words = f.read().split()
-        for (artist, index) in self.lyrics.keys():
-            words = []
-            words.extend(re.findall(r'[\w]+', self.lyrics[artist, index]))
-            words = [word.lower() for word in words]
-            words = [word for word in words if word not in stop_words]
-            words = [stem(word) for word in words]
-            common_texts.append(words)
-        common_dictionary = corpora.Dictionary(common_texts)
-        common_dictionary.filter_extremes(no_below=10, no_above=0.5, keep_n=10000, keep_tokens=None)
-        bow = [common_dictionary.doc2bow(words) for words in common_texts]
-        lda = models.LdaModel(bow, num_topics=50, id2word=common_dictionary, random_state=1)
-        topics = lda.show_topics(num_topics=50, num_words=2, formatted=False)
-        topics_words = [[word[0] for word in topic[1]] for topic in topics]
-        for words, (artist, index) in zip(common_texts, self.lyrics.keys()):
-            doc_bow = common_dictionary.doc2bow(words)
-            topic_words[artist, index] = topics_words[lda[doc_bow][0][0]]
-        return topic_words
-
-    def algorithm(self, choice, content):
-        res = dict()
-        i = 1
-        if choice == 'song':
-            p = re.split(r' (AND|OR) ', content)
-            q = content
-            q = q.replace('AND', ' ')
-            q = q.replace('OR', ' ')
-            q = q.replace('NOT', ' ')
-            tfidf = rank_BM25(q, self.title, self.title_words, self.title_words_freq)
-            if len(p) == 1:
-                search_result = phrase_search(self.title_words, content)
-                for (artist, index), tfidf_value in tfidf:
-                    if (artist, index) in search_result:
-                        line = [self.title[artist, index], artist, self.album[artist, index], self.dates[artist, index], " ".join(self.topic_words[artist, index])]
-                        res[i] = line
-                        i += 1
-            else:
-                query = evaluate(content)
-                search_result = boolean_search(self.title_words, query)
-                for (artist, index), tfidf_value in tfidf:
-                    if (artist, index) in search_result:
-                        line = [self.title[artist, index], artist, self.album[artist, index], self.dates[artist, index], " ".join(self.topic_words[artist, index])]
-                        res[i] = line
-                        i += 1
-
-        elif choice == 'keyword':
-            p = re.split(r' (AND|OR) ', content)
-            q = content
-            q = q.replace('AND', ' ')
-            q = q.replace('OR', ' ')
-            q = q.replace('NOT', ' ')
-            tfidf = rank_BM25(q, self.lyrics, self.lyrics_words, self.lyrics_words_freq)
-            if len(p) == 1:
-                search_result = phrase_search(self.lyrics_words, content)
-                for (artist, index), tfidf_value in tfidf:
-                    if (artist, index) in search_result:
-                        line = [self.title[artist, index], artist, self.album[artist, index], self.dates[artist, index], " ".join(self.topic_words[artist, index])]
-                        res[i] = line
-                        i += 1
-            else:
-                query = evaluate(content)
-                search_result = boolean_search(self.lyrics_words, query)
-                for (artist, index), tfidf_value in tfidf:
-                    if (artist, index) in search_result:
-                        line = [self.title[artist, index], artist, self.album[artist, index], self.dates[artist, index], " ".join(self.topic_words[artist, index])]
-                        res[i] = line
-                        i += 1
-
-        return res
+    return res

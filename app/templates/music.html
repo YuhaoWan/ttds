@@ -2,19 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Music Search</title>
+    <title>FIND MUSIC</title>
     <link rel="stylesheet" href="../static/music.css" />
 
 </head>
 <body>
 
 <div class="header">
-    <form method="post">
+    <form action="http://127.0.0.1:5000/search" method="post">
         <div class="form-box">
             <label class="search-label">FIND MUSIC</label>
-            <input type="text" class="search-input" name="query" value="{{query}}">
-            <button class="search-btn" type="submit" value="Search">Search</button>
+            <input type="text" class="search-input" name="keyword" id = "query" required placeholder="lyrics, title, album, artist">
+            <button class="search-btn" type="submit">Search</button>
         </div>
+
+
     </form>
 </div>
 
@@ -27,10 +29,10 @@
 				<th>Artists</th>
 				<th>Albums</th>
 				<th>Date</th>
-                <th>Topic</th>
+                <th>Label</th>
 			</tr>
 			</thead>
-        {% for i,v in num.items() %}
+        {% for i,v in result.items() %}
 			<tr>
 				<td class="item1">{{v[0]}}</td>
 				<td class="item2">{{v[1]}}</td>
@@ -41,21 +43,6 @@
       {% endfor %}
 		</table>
 </div>
-
-{#<div class="middle">#}
-{#    <label>result number:100</label>#}
-{#    <table class="table table-hover">#}
-{#	     {% for i,v in num.items() %}#}
-{#		  <tr>#}
-{#			<td>songname:{{v}}</td>#}
-{#            <td>singer:{{v}}</td>#}
-{#            <td>album:{{v}}</td>#}
-{#            <td>date:{{v}}</td>#}
-{#		  </tr>#}
-{##}
-{#	     {% endfor %}#}
-{#</table>#}
-{#</div>#}
 
 
 </body>
