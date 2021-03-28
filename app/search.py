@@ -16,4 +16,4 @@ def search():
 
     query = request.form['keyword']
 
-    return render_template('music.html', result=algorithm('song', query))
+    return render_template('music.html', result=algorithm('song', query), search_keyword = query)
