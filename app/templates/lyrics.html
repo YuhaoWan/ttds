@@ -1,0 +1,73 @@
+{#{% extends 'bootstrap/base.html' %}#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>FIND MUSIC</title>
+    <link rel="stylesheet" href="../static/lyrics.css" />
+
+</head>
+<body>
+
+<div class="header">
+{#    <form action="http://35.222.58.19:5000/search" method="post">#}
+    <form action="http://127.0.0.1:5000/search" method="post">
+        <div class="form-box">
+            <label class="search-label">FIND MUSIC</label>
+            <input type="text" class="search-input" name="keyword" id="query" required="required" placeholder= {{ search_keyword }}>
+            <button class="search-btn" type="submit">Search</button>
+        </div>
+
+
+    </form>
+</div>
+<div class="middle-table">
+<div class="forms-forms">
+    <div class="form-groups-1">
+{#    <form action="http://35.222.58.19:5000/songs" method="get">#}
+    <form action="http://127.0.0.1:5000/songs" method="get">
+       <button class="search-Songs" type="submit">Songs</button>
+    </form>
+</div>
+<div class="form-groups-2">
+{#    <form action="http://35.222.58.19:5000/artists" method="get">#}
+    <form action="http://127.0.0.1:5000/artists" method="get">
+       <button class="search-Artists" type="submit">Artists</button>
+    </form>
+</div>
+<div class="form-groups-3">
+{#    <form action="http://35.222.58.19:5000/albums" method="get">#}
+    <form action="http://127.0.0.1:5000/albums" method="get">
+       <button class="search-Albums" type="submit">Albums</button>
+    </form>
+</div>
+<div class="form-groups-4">
+       <button class="search-Lyrics" type="submit">Lyrics</button>
+</div>
+</div>
+
+        <h2>Result List</h2>
+		<table class="Modbus">
+			<thead>
+			<tr>
+                <th>Lyrics</th>
+                <th>Songs</th>
+				<th>Artists</th>
+				<th>Date</th>
+
+			</tr>
+			</thead>
+        {% for key,item in data.items() %}
+            <tr>
+              <td>{{ highlight_word(item[0], search_keyword) |safe }}</td>
+              <td><a href={{ item[0] }}>{{ highlight_word(item[1], search_keyword) |safe }} </a></td>
+              <td><a href={{ item[0] }}>{{ highlight_word(item[2], search_keyword) |safe }} </a></td>
+              <td>{{ highlight_word(item[3], search_keyword) |safe }}</td>
+            </tr>
+            {% endfor %}
+		</table>
+</div>
+
+</body>
+</html>
